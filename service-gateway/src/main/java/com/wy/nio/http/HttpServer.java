@@ -3,11 +3,13 @@ package com.wy.nio.http;
 import java.text.ParseException;
 
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -27,10 +29,11 @@ public class HttpServer {
 		}catch(Exception e){
 			e.printStackTrace();
 		}
+		boolean isLinux = isLinux();
 		ServerBootstrap bootstrap = new ServerBootstrap();
-		EventLoopGroup loopGroup = geEventLoopGroup();
+		EventLoopGroup loopGroup = isLinux?new EpollEventLoopGroup():new NioEventLoopGroup();
 		bootstrap.group(loopGroup, loopGroup);
-		bootstrap.channel(NioServerSocketChannel.class);
+		bootstrap.channel(isLinux?EpollServerSocketChannel.class:NioServerSocketChannel.class);
 		bootstrap.childHandler(new ChannelInitializer<SocketChannel>(){
 			@Override
 			protected void initChannel(SocketChannel ch) throws Exception {
@@ -48,11 +51,8 @@ public class HttpServer {
 		System.out.println("服务已启动 端口:"+port);
 		bootstrap.bind(port).sync();
 	}
-	
-	private static EventLoopGroup geEventLoopGroup() {
+	private static boolean isLinux(){
 		String os = System.getProperty("os.name", "");
-		int cpu = Runtime.getRuntime().availableProcessors();
-		return (os.toLowerCase().indexOf("linux") > -1) ? new EpollEventLoopGroup(cpu) : new NioEventLoopGroup(cpu);
-
+		return os.toLowerCase().indexOf("linux") > -1;
 	}
 }
