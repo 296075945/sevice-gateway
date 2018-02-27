@@ -9,7 +9,8 @@ import java.util.Map;
  * @version 创建时间：2018年1月24日 上午9:59:34
  */
 public class UrlAnnotation {
-	static String[] classNames = { "com.wy.service.gateway.web.AuthController" };
+	static String[] classNames = { "com.wy.service.gateway.web.AuthController",
+			"com.wy.service.gateway.web.TestController"};
 
 
 	public static void init(Map<String, Method> methods, Map<String, Object> instaces) {

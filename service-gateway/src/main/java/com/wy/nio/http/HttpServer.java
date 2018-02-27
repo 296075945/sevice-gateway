@@ -1,9 +1,13 @@
 package com.wy.nio.http;
 
+import java.text.ParseException;
+
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -17,9 +21,15 @@ import io.netty.handler.codec.http.HttpResponseEncoder;
 public class HttpServer {
 	public static void main(String[] args) throws InterruptedException {
 		
+		int port = 8090;
+		try{
+			port = Integer.parseInt(args[0]);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 		ServerBootstrap bootstrap = new ServerBootstrap();
-		
-		bootstrap.group(new NioEventLoopGroup(16), new NioEventLoopGroup(64));
+		EventLoopGroup loopGroup = geEventLoopGroup();
+		bootstrap.group(loopGroup, loopGroup);
 		bootstrap.channel(NioServerSocketChannel.class);
 		bootstrap.childHandler(new ChannelInitializer<SocketChannel>(){
 			@Override
@@ -35,6 +45,14 @@ public class HttpServer {
 		});
 		bootstrap.option(ChannelOption.SO_BACKLOG, 128);
 		bootstrap.childOption(ChannelOption.SO_KEEPALIVE, true);
-		bootstrap.bind(8090).sync();
+		System.out.println("服务已启动 端口:"+port);
+		bootstrap.bind(port).sync();
+	}
+	
+	private static EventLoopGroup geEventLoopGroup() {
+		String os = System.getProperty("os.name", "");
+		int cpu = Runtime.getRuntime().availableProcessors();
+		return (os.toLowerCase().indexOf("linux") > -1) ? new EpollEventLoopGroup(cpu) : new NioEventLoopGroup(cpu);
+
 	}
 }
